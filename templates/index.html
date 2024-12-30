@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row">
-    <!-- Form thêm giao dịch -->
+    <!-- Biểu mẫu thêm giao dịch mới -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
@@ -27,14 +27,14 @@
             </div>
         </div>
 
-        <!-- Các nút chức năng -->
+        <!-- Các nút điều khiển chức năng -->
         <div class="mt-3">
             <a href="{{ url_for('mine_block') }}" class="btn btn-success">Tạo Block Mới</a>
             <a href="{{ url_for('validate_chain') }}" class="btn btn-info">Kiểm Tra Blockchain</a>
         </div>
     </div>
 
-    <!-- Hiển thị giao dịch đang chờ -->
+    <!-- Khu vực hiển thị giao dịch đang chờ -->
     <div class="col-md-8">
         <h4>Giao Dịch Đang Chờ</h4>
         {% if pending_transactions %}
@@ -50,7 +50,7 @@
             <p>Không có giao dịch nào đang chờ xử lý</p>
         {% endif %}
 
-        <!-- Hiển thị blockchain -->
+        <!-- Khu vực hiển thị chuỗi khối -->
         <h4 class="mt-4">Blockchain</h4>
         {% for block in chain %}
             <div class="card mb-3">
@@ -81,4 +81,116 @@
         {% endfor %}
     </div>
 </div>
-{% endblock %} 
+
+<!-- Khu vực hiển thị trực quan chuỗi khối -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Trực quan chuỗi khối</h4>
+        <div id="blockchain-graph" class="mb-4"></div>
+        <div id="block-info" class="card d-none">
+            <div class="card-body"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Phân tích dữ liệu blocks
+    const blocks = JSON.parse('{{ chain|tojson|safe }}'.replace(/&#34;/g, '"'));
+    
+    // Thiết lập container SVG với chiều rộng động
+    const svgWidth = Math.max(800, blocks.length * 150);
+    const svg = d3.select("#blockchain-graph")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("viewBox", `0 0 ${svgWidth} 200`)
+        .attr("height", 200)
+        .style("min-width", "600px");
+
+    // Thêm định nghĩa mũi tên
+    svg.append("defs").append("marker")
+        .attr("id", "arrow")
+        .attr("viewBox", "0 0 10 10")
+        .attr("refX", 25)
+        .attr("refY", 5)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M 0 0 L 10 5 L 0 10 z")
+        .attr("fill", "#666");
+
+    // Tạo nhóm các block
+    const blockWidth = 60;
+    const blockSpacing = 150;
+    
+    const blockGroups = svg.selectAll(".block-group")
+        .data(blocks)
+        .enter()
+        .append("g")
+        .attr("class", "block-group")
+        .attr("transform", (d, i) => `translate(${i * blockSpacing + 50}, 50)`);
+
+    // Thêm hình chữ nhật cho các block
+    blockGroups.append("rect")
+        .attr("width", blockWidth)
+        .attr("height", blockWidth)
+        .attr("rx", 5)
+        .attr("class", "block-rect")
+        .style("fill", "#4CAF50")
+        .style("cursor", "pointer")
+        .on("click", function(event, d) {
+            showBlockInfo(d);
+        });
+
+    // Thêm số thứ tự block
+    blockGroups.append("text")
+        .attr("x", blockWidth/2)
+        .attr("y", blockWidth/2)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .style("fill", "white")
+        .style("font-weight", "bold")
+        .text(d => `#${d.index}`);
+
+    // Thêm mũi tên giữa các block
+    if (blocks.length > 1) {
+        svg.selectAll(".arrow")
+            .data(blocks.slice(1))
+            .enter()
+            .append("line")
+            .attr("class", "arrow")
+            .attr("x1", (d, i) => i * blockSpacing + blockWidth + 50)
+            .attr("y1", 50 + blockWidth/2)
+            .attr("x2", (d, i) => (i + 1) * blockSpacing + 50)
+            .attr("y2", 50 + blockWidth/2)
+            .attr("stroke", "#666")
+            .attr("stroke-width", 2)
+            .attr("marker-end", "url(#arrow)");
+    }
+
+    function showBlockInfo(block) {
+        const blockInfo = document.getElementById('block-info');
+        blockInfo.classList.remove('d-none');
+        blockInfo.querySelector('.card-body').innerHTML = `
+            <h5>Block #${block.index}</h5>
+            <p><strong>Hash:</strong> ${block.hash}</p>
+            <p><strong>Previous Hash:</strong> ${block.previous_hash}</p>
+            <p><strong>Merkle Root:</strong> ${block.merkle_root}</p>
+            <p><strong>Nonce:</strong> ${block.nonce}</p>
+            <p><strong>Timestamp:</strong> ${block.timestamp}</p>
+            <h6>Giao dịch trong block:</h6>
+            ${block.transactions && block.transactions.length > 0 
+                ? block.transactions.map(tx => 
+                    `<p>Sinh viên: ${tx.student_id} | Môn: ${tx.course} | Điểm: ${tx.score}</p>`
+                ).join('')
+                : '<p>Không có giao dịch</p>'
+            }
+        `;
+    }
+});
+</script>
+{% endblock %}

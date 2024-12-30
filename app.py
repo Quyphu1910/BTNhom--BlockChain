@@ -8,8 +8,8 @@ blockchain = Blockchain()
 
 @app.route('/')
 def index():
-    return render_template('index.html', 
-                         chain=blockchain.chain,
+    return render_template('index.html',
+                         chain=[block.toDict() for block in blockchain.chain],
                          pending_transactions=blockchain.pending_transactions)
 
 @app.route('/add_transaction', methods=['POST'])
@@ -41,4 +41,4 @@ def validate_chain():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)

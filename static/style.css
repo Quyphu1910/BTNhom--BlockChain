@@ -1,11 +1,39 @@
+/* Định dạng cho thẻ card */
 .card {
     margin-bottom: 20px;
 }
 
+/* Định dạng cho các mục trong danh sách */
 .list-group-item {
     margin-bottom: 10px;
 }
 
+/* Xử lý hiển thị chi tiết block */
 .block-details {
     word-break: break-all;
-} 
+}
+
+/* Khu vực hiển thị đồ họa blockchain */
+#blockchain-graph {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+/* Hiệu ứng di chuột qua block */
+.block-rect:hover {
+    fill: #2E7D32 !important;
+}
+
+/* Định dạng khu vực thông tin block */
+#block-info {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+}
+
+/* Xử lý văn bản trong thông tin block */
+#block-info .card-body {
+    word-break: break-all;
+}

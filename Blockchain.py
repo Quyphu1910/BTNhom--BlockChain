@@ -9,7 +9,7 @@ from datetime import datetime
 
 class Transaction:
     def __init__(self, student_id, course, score):
-        # ID giao dịch duy nhất
+        # Mã giao dịch duy nhất
         self.transaction_id = str(uuid.uuid4())
         # Mã số sinh viên
         self.student_id = student_id
@@ -33,7 +33,7 @@ class Transaction:
         return f"Transaction(ID={self.transaction_id}, student_id={self.student_id}, course={self.course}, score={self.score}, timestamp={self.timestamp})"
 
 # ============================
-# LỚP BLOCK (KHỐI)
+# LỚP KHỐI (Block)
 # ============================
 
 class Block:
@@ -46,15 +46,15 @@ class Block:
         self.timestamp = time.time()
         # Danh sách giao dịch trong khối
         self.transactions = transactions
-        # Merkle Root cho giao dịch
+        # Mã băm gốc Merkle cho giao dịch
         self.merkle_root = self.calculateMerkleRoot()
-        # Nonce (dùng để khai thác khối)
+        # Số nonce (dùng để đào khối)
         self.nonce = 0
         # Mã băm của khối hiện tại
         self.hash = self.calculateHash()
 
     def calculateHash(self):
-        # Tính mã băm cho khối dựa trên nội dung của nó
+        # Tính toán mã băm cho khối dựa trên nội dung của nó
         block_data = (f"{self.index}"
                       f"{self.merkle_root}"
                       f"{self.timestamp}"
@@ -63,7 +63,7 @@ class Block:
         return hashlib.sha256(block_data.encode()).hexdigest()
 
     def calculateMerkleRoot(self):
-        # Tính Merkle Root từ danh sách giao dịch
+        # Tạo cây Merkle và tính gốc Merkle từ các giao dịch
         hashes = []
         for tx in self.transactions:
             # Chuyển giao dịch thành dictionary
@@ -92,26 +92,37 @@ class Block:
         return hashes[0] if hashes else "0"
 
     def mineBlock(self, difficulty):
-        # Khai thác khối bằng cách tìm mã băm bắt đầu với một số lượng "0" nhất định
+        # Đào khối với độ khó xác định
         target = "0" * difficulty
         while not self.hash.startswith(target):
             self.nonce += 1
             self.hash = self.calculateHash()
 
+    def toDict(self):
+        return {
+            "index": self.index,
+            "hash": self.hash,
+            "previous_hash": self.previous_hash,
+            "merkle_root": self.merkle_root,
+            "nonce": self.nonce,
+            "timestamp": self.timestamp,
+            "transactions": [tx.toDict() for tx in self.transactions]
+        }
+
     def __repr__(self):
         return f"Block(index={self.index}, hash={self.hash}, merkle_root={self.merkle_root}, transactions={self.transactions}, timestamp={self.timestamp})"
 
 # ============================
-# LỚP BLOCKCHAIN
+# LỚP CHUỖI KHỐI (Blockchain)
 # ============================
 
 class Blockchain:
     def __init__(self):
-        # Khởi tạo Blockchain với khối gốc (Genesis Block)
+        # Khởi tạo chuỗi khối với khối khởi nguyên
         self.chain = [self.createGenesisBlock()]
-        # Danh sách giao dịch chờ xử lý
+        # Danh sách giao dịch đang chờ
         self.pending_transactions = []
-        # Độ khó để khai thác khối mới
+        # Độ khó đào khối
         self.difficulty = 3
 
     def createGenesisBlock(self):
