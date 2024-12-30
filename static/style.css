@@ -1,0 +1,11 @@
+.card {
+    margin-bottom: 20px;
+}
+
+.list-group-item {
+    margin-bottom: 10px;
+}
+
+.block-details {
+    word-break: break-all;
+} 
